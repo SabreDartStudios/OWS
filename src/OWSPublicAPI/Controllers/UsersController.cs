@@ -202,6 +202,21 @@ namespace OWSPublicAPI.Controllers
         }
 
         /// <summary>
+        /// Logout of a User Session
+        /// </summary>
+        /// <remarks>
+        /// Logout of a User Session based on a UserSessionGUID.  This method is for logout from the client side of a game before connecting to a UE server.
+        /// </remarks>
+        [HttpPost]
+        [Route("Logout")]
+        [Produces(typeof(SuccessAndErrorMessage))]
+        public async Task<SuccessAndErrorMessage> Logout([FromBody] LogoutDTO request)
+        {
+            LogoutRequest logoutRequest = new LogoutRequest(request, _usersRepository, _customerGuid);
+            return await logoutRequest.Handle();
+        }
+
+        /// <summary>
         /// Set the Character that has been selected to play for a User Session (UserSessionGUID).
         /// </summary>
         /// <remarks>
@@ -232,14 +247,14 @@ namespace OWSPublicAPI.Controllers
         /// Register a new User account by sending FirstName, LastName, Email, and Password.
         /// </summary>
         /// <remarks>
-        /// Implement your own IPublicAPIInputValidation to specify your specific validation rules for FirstName, LastName, Email, and Password.  You can wire up the dependency injection for your custom IPublicAPIInputValidation in Startup.cs.
+        /// Register a new User and then Logs the User in and Creates a User Session.  Implement your own IPublicAPIInputValidation to specify your specific validation rules for FirstName, LastName, Email, and Password.  You can wire up the dependency injection for your custom IPublicAPIInputValidation in Startup.cs.
         /// </remarks>
         [HttpPost]
         [Route("RegisterUser")]
-        [Produces(typeof(SuccessAndErrorMessage))]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest request)
+        [Produces(typeof(PlayerLoginAndCreateSession))]
+        public async Task<PlayerLoginAndCreateSession> RegisterUser([FromBody] RegisterUserDTO requestDTO)
         {
-            request.SetData(_usersRepository, _externalLoginProviderFactory, _customerGuid);
+            RegisterUserRequest request = new RegisterUserRequest(requestDTO, _usersRepository, _externalLoginProviderFactory, _customerGuid);
             return await request.Handle();
         }
 

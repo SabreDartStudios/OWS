@@ -12,6 +12,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
+using OWSShared.Options;
 
 namespace OWSData.Repositories.Implementations.MSSQL
 {
@@ -29,6 +30,32 @@ namespace OWSData.Repositories.Implementations.MSSQL
             get
             {
                 return new SqlConnection(_storageOptions.Value.OWSDBConnectionString);
+            }
+        }
+
+        public async Task<GetServerInstanceFromPort> GetZoneInstance(Guid customerGUID, int zoneInstanceId)
+        {
+            GetServerInstanceFromPort output;
+
+            try
+            {
+                using (Connection)
+                {
+                    var parameter = new DynamicParameters();
+                    parameter.Add("@CustomerGUID", customerGUID);
+                    parameter.Add("@MapInstanceID", zoneInstanceId);
+
+                    output = await Connection.QuerySingleAsync<GetServerInstanceFromPort>(GenericQueries.GetMapInstance,
+                        parameter,
+                        commandType: CommandType.Text);
+                }
+
+                return output;
+            }
+            catch (Exception ex)
+            {
+                output = new GetServerInstanceFromPort();
+                return output;
             }
         }
 

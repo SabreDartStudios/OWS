@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using OWSData.Models;
 using OWSData.Repositories.Interfaces;
 using OWSShared.Interfaces;
@@ -10,15 +9,13 @@ using OWSShared.RequestPayloads;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace OWSShared.Objects
+namespace OWSInstanceLauncher.Services
 {
     public class ServerLauncherMQListener : IInstanceLauncherJob //BackgroundService
     {
@@ -129,7 +126,8 @@ namespace OWSShared.Objects
             }
             catch (Exception ex)
             {
-                Log.Error($"Error connecting to RabbitMQ: {ex.Message}");
+                Log.Error($"Error connecting to RabbitMQ.  Check that your can access RabbitMQ from your browser by going to: http://host.docker.internal:15672/  Use default username / password: dev / test.  If the page doesn't load check your Windows HOSTs file for the three entries that Docker Desktop is supposed to add on installation.  If the page does load, but you can't login, you probably have another copy of RabbitMQ already running.  Disable your copy of RabbitMQ and try again.  Error message: {ex.Message}");
+                return;
             }
 
             // create channel for server spin up  
@@ -253,10 +251,10 @@ namespace OWSShared.Objects
             //string PathToDedicatedServer = "E:\\Program Files\\Epic Games\\UE_4.25\\Engine\\Binaries\\Win64\\UE4Editor.exe";
             //string ServerArguments = "\"C:\\OWS\\OpenWorldStarterPlugin\\OpenWorldStarter.uproject\" {0}?listen -server -log -nosteam -messaging -port={1}";
 
-            string serverArguments = (_owsInstanceLauncherOptions.Value.IsServerEditor ? "\"" + _owsInstanceLauncherOptions.Value.PathToUProject + "\" ": "") 
+            string serverArguments = (_owsInstanceLauncherOptions.Value.IsServerEditor ? "\"" + _owsInstanceLauncherOptions.Value.PathToUProject + "\" " : "")
                 + "{0}?listen -server "
-                + (_owsInstanceLauncherOptions.Value.UseServerLog ? "-log " : "") 
-                + (_owsInstanceLauncherOptions.Value.UseNoSteam ? "-nosteam " : "") 
+                + (_owsInstanceLauncherOptions.Value.UseServerLog ? "-log " : "")
+                + (_owsInstanceLauncherOptions.Value.UseNoSteam ? "-nosteam " : "")
                 + "-port={1} "
                 + "-zoneinstanceid={2}";
 
@@ -275,7 +273,8 @@ namespace OWSShared.Objects
             proc.Start();
             //proc.WaitForInputIdle();
 
-            _zoneServerProcessesRepository.AddZoneServerProcess(new ZoneServerProcess {
+            _zoneServerProcessesRepository.AddZoneServerProcess(new ZoneServerProcess
+            {
                 ZoneInstanceId = zoneInstanceID,
                 MapName = mapName,
                 Port = port,
@@ -349,7 +348,7 @@ namespace OWSShared.Objects
                     }
                 };
 
-                var RegisterLauncherPayloadRequest = new StringContent(JsonConvert.SerializeObject(RegisterLauncherPayload), Encoding.UTF8, "application/json");
+                var RegisterLauncherPayloadRequest = new StringContent(JsonSerializer.Serialize(RegisterLauncherPayload), Encoding.UTF8, "application/json");
 
                 var responseMessageAsync = instanceManagementHttpClient.PostAsync("api/Instance/RegisterLauncher", RegisterLauncherPayloadRequest);
                 var responseMessage = responseMessageAsync.Result;
@@ -430,7 +429,7 @@ namespace OWSShared.Objects
                 }
             };
 
-            var shutDownInstanceLauncherRequest = new StringContent(JsonConvert.SerializeObject(worldServerIDRequestPayload), Encoding.UTF8, "application/json");
+            var shutDownInstanceLauncherRequest = new StringContent(JsonSerializer.Serialize(worldServerIDRequestPayload), Encoding.UTF8, "application/json");
 
             var request = new HttpRequestMessage()
             {
@@ -449,8 +448,8 @@ namespace OWSShared.Objects
         {
             var instanceManagementHttpClient = _httpClientFactory.CreateClient("OWSInstanceManagement");
 
-            var setZoneInstanceStatusRequestPayload = new 
-            { 
+            var setZoneInstanceStatusRequestPayload = new
+            {
                 request = new SetZoneInstanceStatusRequestPayload
                 {
                     ZoneInstanceID = zoneInstanceID,
@@ -458,7 +457,7 @@ namespace OWSShared.Objects
                 }
             };
 
-            var setZoneInstanceStatusRequest = new StringContent(JsonConvert.SerializeObject(setZoneInstanceStatusRequestPayload), Encoding.UTF8, "application/json");
+            var setZoneInstanceStatusRequest = new StringContent(JsonSerializer.Serialize(setZoneInstanceStatusRequestPayload), Encoding.UTF8, "application/json");
 
             var responseMessage = await instanceManagementHttpClient.PostAsync("api/Instance/SetZoneInstanceStatus", setZoneInstanceStatusRequest);
 

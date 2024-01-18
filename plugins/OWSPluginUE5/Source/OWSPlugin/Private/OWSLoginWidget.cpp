@@ -99,6 +99,12 @@ void UOWSLoginWidget::OnLoginAndCreateSessionResponseReceived(FHttpRequestPtr Re
 		return;
 	}
 
+	if (!LoginAndCreateSession->Authenticated || LoginAndCreateSession->UserSessionGUID.IsEmpty())
+	{
+		ErrorLoginAndCreateSession("Unknown Login Error!  Make sure OWS 2 is running in debug mode in VS 2022 with docker-compose.  Then make sure your OWSAPICustomerKey in DefaultGame.ini matches your CustomerGUID in your database.");
+		return;
+	}
+
 	NotifyLoginAndCreateSession(LoginAndCreateSession->UserSessionGUID);
 }
 
@@ -166,13 +172,13 @@ void UOWSLoginWidget::OnRegisterResponseReceived(FHttpRequestPtr Request, FHttpR
 		return;
 	}
 
-	TSharedPtr<FSuccessAndErrorMessage> SuccessAndErrorMessage = GetStructFromJsonObject<FSuccessAndErrorMessage>(JsonObject);
+	TSharedPtr<FLoginAndCreateSession> RegisterAndCreateSession = GetStructFromJsonObject<FLoginAndCreateSession>(JsonObject);
 
-	if (!SuccessAndErrorMessage->ErrorMessage.IsEmpty())
+	if (!RegisterAndCreateSession->ErrorMessage.IsEmpty())
 	{
-		ErrorRegister(*SuccessAndErrorMessage->ErrorMessage);
+		ErrorRegister(*RegisterAndCreateSession->ErrorMessage);
 		return;
 	}
 
-	NotifyRegister();
+	NotifyRegister(RegisterAndCreateSession->UserSessionGUID);
 }

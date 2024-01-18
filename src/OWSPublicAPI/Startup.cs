@@ -114,7 +114,7 @@ namespace OWSPublicAPI
 
             services.Configure<OWSShared.Options.PublicAPIOptions>(Configuration.GetSection(OWSShared.Options.PublicAPIOptions.SectionName));
             services.Configure<OWSShared.Options.APIPathOptions>(Configuration.GetSection(OWSShared.Options.APIPathOptions.SectionName));
-            services.Configure<OWSData.Models.StorageOptions>(Configuration.GetSection(OWSData.Models.StorageOptions.SectionName));
+            services.Configure<OWSShared.Options.StorageOptions>(Configuration.GetSection(OWSShared.Options.StorageOptions.SectionName));
 
             // Register And Validate External Login Provider Options
             // services.ConfigureAndValidate<EpicOnlineServicesOptions>(ExternalLoginProviderOptions.EpicOnlineServices, Configuration.GetSection($"{ExternalLoginProviderOptions.SectionName}:{ExternalLoginProviderOptions.EpicOnlineServices}"));
@@ -187,6 +187,7 @@ namespace OWSPublicAPI
 
             container.Register<IPublicAPIInputValidation, DefaultPublicAPIInputValidation>(Lifestyle.Singleton);
             container.Register<ICustomCharacterDataSelector, DefaultCustomCharacterDataSelector>(Lifestyle.Singleton);
+            container.Register<IGetReadOnlyPublicCharacterData, DefaultGetReadOnlyPublicCharacterData>(Lifestyle.Singleton);
             container.Register<IHeaderCustomerGUID, HeaderCustomerGUID>(Lifestyle.Scoped);
 
             var externalloginproviderfactory = new ExternalLoginProviderFactory(container);

@@ -90,6 +90,22 @@ public:
 };
 
 USTRUCT()
+struct FGetCharacterDataAndCustomData {
+	GENERATED_BODY()
+
+public:
+	FGetCharacterDataAndCustomData() {
+		UserSessionGUID = "";
+		CharacterName = "";
+	}
+
+	UPROPERTY()
+		FString UserSessionGUID;
+	UPROPERTY()
+		FString CharacterName;
+};
+
+USTRUCT()
 struct FAddOrUpdateCustomCharacterDataJSONPost {
 	GENERATED_BODY()
 
@@ -1024,6 +1040,36 @@ public:
 		FString CharacterName;
 	UPROPERTY()
 		FString DefaultSetName;
+};
+
+USTRUCT()
+struct FLogout
+{
+	GENERATED_BODY()
+
+public:
+	FLogout() {
+		UserSessionGUID = "";
+	}
+
+	UPROPERTY()
+		FString UserSessionGUID;
+};
+
+USTRUCT(BlueprintType, Blueprintable)
+struct FChatGroup
+{
+	GENERATED_USTRUCT_BODY()
+
+		FChatGroup() {
+		ChatGroupID = 0;
+		ChatGroupName = "";
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chat")
+		int32 ChatGroupID;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chat")
+		FString ChatGroupName;
 };
 
 /**

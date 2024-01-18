@@ -5,37 +5,12 @@
 #include "GameFramework/PlayerController.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 //#include "OWSAPIStructs.h"
-#include "OWSCharacterWithAbilities.h"
+//#include "OWSCharacterWithAbilities.h"
 #include "OWSPlayerState.h"
-#include "OWSReplicationGraph.h"
 #include "OWSPlayerControllerComponent.h"
 #include "OWSPlayerController.generated.h"
 
-
-
-
-
-USTRUCT(BlueprintType, Blueprintable)
-struct FChatGroup
-{
-	GENERATED_USTRUCT_BODY()
-
-	FChatGroup() {
-		ChatGroupID = 0;
-		ChatGroupName = "";
-	}
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chat")
-		int32 ChatGroupID;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chat")
-		FString ChatGroupName;
-};
-
-
-
-
-
-
+class AOWSCharacterWithAbilities;
 
 /**
  * 
@@ -102,9 +77,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Player State")
 		AOWSPlayerState* GetOWSPlayerState() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Replication")
-		UOWSReplicationGraph* GetReplicationGraph() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Travel")
 		void TravelToMap(const FString& URL, const bool SeamlessTravel);
@@ -244,7 +216,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Login")
 		void ErrorCreateCharacter(const FString &ErrorMsg);
 
-	//Create Character
+	//Create Character Using Default Character Values
 	UFUNCTION(BlueprintCallable, Category = "Login")
 		void CreateCharacterUsingDefaultCharacterValues(FString UserSessionGUID, FString CharacterName, FString DefaultSetName);
 
@@ -253,6 +225,16 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Login")
 		void ErrorCreateCharacterUsingDefaultCharacterValues(const FString& ErrorMsg);
+
+	//Logout
+	UFUNCTION(BlueprintCallable, Category = "Login")
+		void Logout(FString UserSessionGUID);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Login")
+		void NotifyLogout();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Login")
+		void ErrorLogout(const FString& ErrorMsg);
 
 	//Get Cosmetic Character Custom Data
 	UFUNCTION(BlueprintCallable, Category = "Stats")

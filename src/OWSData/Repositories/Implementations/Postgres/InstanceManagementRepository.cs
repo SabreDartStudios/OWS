@@ -10,6 +10,7 @@ using OWSData.Models.Composites;
 using OWSData.Models.StoredProcs;
 using OWSData.Repositories.Interfaces;
 using OWSData.SQL;
+using OWSShared.Options;
 
 namespace OWSData.Repositories.Implementations.Postgres
 {
@@ -23,6 +24,32 @@ namespace OWSData.Repositories.Implementations.Postgres
         }
 
         private IDbConnection Connection => new NpgsqlConnection(_storageOptions.Value.OWSDBConnectionString);
+
+        public async Task<GetServerInstanceFromPort> GetZoneInstance(Guid customerGUID, int zoneInstanceId)
+        {
+            GetServerInstanceFromPort output;
+
+            try
+            {
+                using (Connection)
+                {
+                    var parameter = new DynamicParameters();
+                    parameter.Add("@CustomerGUID", customerGUID);
+                    parameter.Add("@MapInstanceID", zoneInstanceId);
+
+                    output = await Connection.QuerySingleAsync<GetServerInstanceFromPort>(GenericQueries.GetMapInstance,
+                        parameter,
+                        commandType: CommandType.Text);
+                }
+
+                return output;
+            }
+            catch (Exception ex)
+            {
+                output = new GetServerInstanceFromPort();
+                return output;
+            }
+        }
 
         public async Task<GetServerInstanceFromPort> GetServerInstanceFromPort(Guid customerGUID, string serverIP, int port)
         {

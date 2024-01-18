@@ -4,6 +4,7 @@
 #include "OWSTravelToMapActor.h"
 #include "OWSGameInstance.h"
 #include "OWSAPISubsystem.h"
+#include "OWS2API.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
 
@@ -63,6 +64,8 @@ void UOWSPlayerControllerComponent::InitializeOWSAPISubsystemOnPlayerControllerC
 	UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this);
 	GameInstance->GetSubsystem<UOWSAPISubsystem>()->OnNotifyCreateCharacterUsingDefaultCharacterValuesDelegate.BindUObject(this, &UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValuesSuccess);
 	GameInstance->GetSubsystem<UOWSAPISubsystem>()->OnErrorCreateCharacterUsingDefaultCharacterValuesDelegate.BindUObject(this, &UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValuesError);
+	GameInstance->GetSubsystem<UOWSAPISubsystem>()->OnNotifyLogoutDelegate.BindUObject(this, &UOWSPlayerControllerComponent::LogoutSuccess);
+	GameInstance->GetSubsystem<UOWSAPISubsystem>()->OnErrorLogoutDelegate.BindUObject(this, &UOWSPlayerControllerComponent::LogoutError);
 }
 
 void UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValuesSuccess()
@@ -73,6 +76,16 @@ void UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValuesSu
 void UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValuesError(const FString& ErrorMsg)
 {
 	OnErrorCreateCharacterUsingDefaultCharacterValuesDelegate.ExecuteIfBound(ErrorMsg);
+}
+
+void UOWSPlayerControllerComponent::LogoutSuccess()
+{
+	OnNotifyLogoutDelegate.ExecuteIfBound();
+}
+
+void UOWSPlayerControllerComponent::LogoutError(const FString& ErrorMsg)
+{
+	OnErrorLogoutDelegate.ExecuteIfBound(ErrorMsg);
 }
 
 // Called when the game starts
@@ -514,10 +527,11 @@ void UOWSPlayerControllerComponent::OnGetCharacterStatsResponseReceived(FHttpReq
 //GetCharacterDataAndCustomData - This makes a call to the OWS Public API and is usable from the Character Selection screen.
 void UOWSPlayerControllerComponent::GetCharacterDataAndCustomData(FString UserSessionGUID, FString CharName)
 {
-	FGetCharacterStatsJSONPost GetCharacterStatsJSONPost;
-	GetCharacterStatsJSONPost.CharacterName = CharName;
+	FGetCharacterDataAndCustomData GetCharacterDataAndCustomDataJSONPost;
+	GetCharacterDataAndCustomDataJSONPost.UserSessionGUID = UserSessionGUID;
+	GetCharacterDataAndCustomDataJSONPost.CharacterName = CharName;
 	FString PostParameters = "";
-	if (FJsonObjectConverter::UStructToJsonObjectString(GetCharacterStatsJSONPost, PostParameters))
+	if (FJsonObjectConverter::UStructToJsonObjectString(GetCharacterDataAndCustomDataJSONPost, PostParameters))
 	{
 		ProcessOWS2POSTRequest("OWSPublicAPI", "api/Characters/ByName", PostParameters, &UOWSPlayerControllerComponent::OnGetCharacterDataAndCustomDataResponseReceived);
 	}
@@ -1015,6 +1029,13 @@ void UOWSPlayerControllerComponent::CreateCharacterUsingDefaultCharacterValues(F
 {
 	UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this);
 	GameInstance->GetSubsystem<UOWSAPISubsystem>()->CreateCharacterUsingDefaultCharacterValues(UserSessionGUID, CharacterName, DefaultSetName);
+}
+
+//Logout
+void UOWSPlayerControllerComponent::Logout(FString UserSessionGUID)
+{
+	UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(this);
+	GameInstance->GetSubsystem<UOWSAPISubsystem>()->Logout(UserSessionGUID);
 }
 
 //Remove Character
