@@ -54,9 +54,6 @@ public:
 		float ServerTravelRY;
 		float ServerTravelRZ;
 
-	FVector LastCharacterLocation;
-	FRotator LastCharacterRotation;
-
 	UPROPERTY()
 		TMap<FString, int32> LocalMeshItemsMap;
 
@@ -84,9 +81,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Travel")
 		void TravelToMap2(const FString& ServerAndPort, const float X, const float Y, const float Z, const float RX, const float RY,
 			const float RZ, const FString& PlayerName, const bool SeamlessTravel);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Connection")
-		float TravelTimeout;
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 

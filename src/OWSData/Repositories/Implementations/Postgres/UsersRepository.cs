@@ -31,13 +31,13 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             IEnumerable<GetAllCharacters> outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGUID);
                 p.Add("@UserSessionGUID", userSessionGUID);
 
-                outputObject = await Connection.QueryAsync<GetAllCharacters>(GenericQueries.GetAllCharacters,
+                outputObject = await connection.QueryAsync<GetAllCharacters>(GenericQueries.GetAllCharacters,
                     p,
                     commandType: CommandType.Text);
             }
@@ -51,7 +51,7 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGUID);
@@ -59,7 +59,7 @@ namespace OWSData.Repositories.Implementations.Postgres
                     p.Add("@CharacterName", characterName);
                     p.Add("@ClassName", className);
 
-                    outputObject = await Connection.QuerySingleAsync<CreateCharacter>("select * from AddCharacter(@CustomerGUID,@UserSessionGUID,@CharacterName,@ClassName)",
+                    outputObject = await connection.QuerySingleAsync<CreateCharacter>("select * from AddCharacter(@CustomerGUID,@UserSessionGUID,@CharacterName,@ClassName)",
                         p,
                         commandType: CommandType.Text);
                 }
@@ -81,37 +81,43 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             SuccessAndErrorMessage outputObject = new SuccessAndErrorMessage();
 
-            IDbConnection conn = Connection;
-            conn.Open();
-            using IDbTransaction transaction = conn.BeginTransaction();
-            try
+            using (var connection = (NpgsqlConnection)Connection)
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("CustomerGUID", customerGUID);
-                parameters.Add("UserGUID", userGUID);
-                parameters.Add("CharacterName", characterName);
-                parameters.Add("DefaultSetName", defaultSetName);
+                await connection.OpenAsync();
 
-                int outputCharacterId = await Connection.QuerySingleOrDefaultAsync<int>(PostgresQueries.AddCharacterUsingDefaultCharacterValues,
-                    parameters,
-                    commandType: CommandType.Text);
-
-                parameters.Add("CharacterID", outputCharacterId);
-                await Connection.ExecuteAsync(GenericQueries.AddDefaultCustomCharacterData,
-                    parameters,
-                    commandType: CommandType.Text);
-                transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                outputObject = new SuccessAndErrorMessage()
+                using (IDbTransaction transaction = connection.BeginTransaction())
                 {
-                    Success = false,
-                    ErrorMessage = ex.Message
-                };
+                    try
+                    {
+                        var parameters = new DynamicParameters();
+                        parameters.Add("CustomerGUID", customerGUID);
+                        parameters.Add("UserGUID", userGUID);
+                        parameters.Add("CharacterName", characterName);
+                        parameters.Add("DefaultSetName", defaultSetName);
 
-                return outputObject;
+                        int outputCharacterId = await connection.QuerySingleOrDefaultAsync<int>(
+                            PostgresQueries.AddCharacterUsingDefaultCharacterValues,
+                            parameters,
+                            commandType: CommandType.Text);
+
+                        parameters.Add("CharacterID", outputCharacterId);
+                        await connection.ExecuteAsync(GenericQueries.AddDefaultCustomCharacterData,
+                            parameters,
+                            commandType: CommandType.Text);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        outputObject = new SuccessAndErrorMessage()
+                        {
+                            Success = false,
+                            ErrorMessage = ex.Message
+                        };
+
+                        return outputObject;
+                    }
+                }
             }
 
             outputObject = new SuccessAndErrorMessage()
@@ -128,7 +134,7 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             IEnumerable<GetPlayerGroupsCharacterIsIn> OutputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGUID);
@@ -136,7 +142,7 @@ namespace OWSData.Repositories.Implementations.Postgres
                 p.Add("@UserSessionGUID", userSessionGUID);
                 p.Add("@PlayerGroupTypeID", playerGroupTypeID);
 
-                OutputObject = await Connection.QueryAsync<GetPlayerGroupsCharacterIsIn>("select * from GetPlayerGroupsCharacterIsIn(@CustomerGUID,@CharName,@UserSessionGUID,@PlayerGroupTypeID)",
+                OutputObject = await connection.QueryAsync<GetPlayerGroupsCharacterIsIn>("select * from GetPlayerGroupsCharacterIsIn(@CustomerGUID,@CharName,@UserSessionGUID,@PlayerGroupTypeID)",
                     p,
                     commandType: CommandType.Text);
             }
@@ -148,13 +154,13 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             User outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGuid);
                 p.Add("@UserGUID", userGuid);
 
-                outputObject = await Connection.QuerySingleOrDefaultAsync<User>("select * from GetUser(@CustomerGUID,@UserGUID)",
+                outputObject = await connection.QuerySingleOrDefaultAsync<User>("select * from GetUser(@CustomerGUID,@UserGUID)",
                     p,
                     commandType: CommandType.Text);
             }
@@ -166,12 +172,12 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             IEnumerable<User> outputObject = null;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGuid);
 
-                outputObject = await Connection.QueryAsync<User>(GenericQueries.GetUsers, p);
+                outputObject = await connection.QueryAsync<User>(GenericQueries.GetUsers, p);
             }
 
             return outputObject;
@@ -181,13 +187,13 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             GetUserSession outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGUID);
                 p.Add("@UserSessionGUID", userSessionGUID);
 
-                outputObject = await Connection.QuerySingleOrDefaultAsync<GetUserSession>("select * from GetUserSession(@CustomerGUID,@UserSessionGUID)",
+                outputObject = await connection.QuerySingleOrDefaultAsync<GetUserSession>("select * from GetUserSession(@CustomerGUID,@UserSessionGUID)",
                     p,
                     commandType: CommandType.Text);
             }
@@ -199,9 +205,9 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             GetUserSession outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
-                outputObject = await Connection.QueryFirstOrDefaultAsync<GetUserSession>(PostgresQueries.GetUserSessionSQL, new { @CustomerGUID = customerGUID, @UserSessionGUID = userSessionGUID });
+                outputObject = await connection.QueryFirstOrDefaultAsync<GetUserSession>(PostgresQueries.GetUserSessionSQL, new { @CustomerGUID = customerGUID, @UserSessionGUID = userSessionGUID });
             }
 
             return outputObject;
@@ -214,11 +220,11 @@ namespace OWSData.Repositories.Implementations.Postgres
             User user;
             Characters character;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
-                userSession = await Connection.QueryFirstOrDefaultAsync<UserSessions>(PostgresQueries.GetUserSessionOnlySQL, new { @CustomerGUID = customerGUID, @UserSessionGUID = userSessionGUID });
-                var userTask = Connection.QueryFirstOrDefaultAsync<User>(PostgresQueries.GetUserSQL, new { @CustomerGUID = customerGUID, @UserGUID = userSession.UserGuid });
-                var characterTask = Connection.QueryFirstOrDefaultAsync<Characters>(PostgresQueries.GetCharacterByNameSQL, new { @CustomerGUID = customerGUID, @CharacterName = userSession.SelectedCharacterName });
+                userSession = await connection.QueryFirstOrDefaultAsync<UserSessions>(PostgresQueries.GetUserSessionOnlySQL, new { @CustomerGUID = customerGUID, @UserSessionGUID = userSessionGUID });
+                var userTask = connection.QueryFirstOrDefaultAsync<User>(PostgresQueries.GetUserSQL, new { @CustomerGUID = customerGUID, @UserGUID = userSession.UserGuid });
+                var characterTask = connection.QueryFirstOrDefaultAsync<Characters>(PostgresQueries.GetCharacterByNameSQL, new { @CustomerGUID = customerGUID, @CharacterName = userSession.SelectedCharacterName });
 
                 user = await userTask;
                 character = await characterTask;
@@ -235,7 +241,7 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             PlayerLoginAndCreateSession outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
                 var p = new DynamicParameters();
                 p.Add("@CustomerGUID", customerGUID);
@@ -243,7 +249,7 @@ namespace OWSData.Repositories.Implementations.Postgres
                 p.Add("@Password", password);
                 p.Add("@DontCheckPassword", dontCheckPassword);
 
-                outputObject = await Connection.QuerySingleOrDefaultAsync<PlayerLoginAndCreateSession>($"select * from PlayerLoginAndCreateSession(@CustomerGUID,@Email,@Password,@DontCheckPassword)",
+                outputObject = await connection.QuerySingleOrDefaultAsync<PlayerLoginAndCreateSession>($"select * from PlayerLoginAndCreateSession(@CustomerGUID,@Email,@Password,@DontCheckPassword)",
                     p,
                     commandType: CommandType.Text);
             }
@@ -257,13 +263,13 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGuid);
                     p.Add("@UserSessionGUID", userSessionGuid);
 
-                    await Connection.ExecuteAsync(GenericQueries.Logout, p, commandType: CommandType.Text);
+                    await connection.ExecuteAsync(GenericQueries.Logout, p, commandType: CommandType.Text);
                 }
 
                 outputObject.Success = true;
@@ -286,14 +292,14 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGUID);
                     p.Add("@UserSessionGUID", userSessionGUID);
                     p.Add("@SelectedCharacterName", selectedCharacterName);
 
-                    await Connection.ExecuteAsync("call UserSessionSetSelectedCharacter(@CustomerGUID, @UserSessionGUID, @SelectedCharacterName)",
+                    await connection.ExecuteAsync("call UserSessionSetSelectedCharacter(@CustomerGUID, @UserSessionGUID, @SelectedCharacterName)",
                         p,
                         commandType: CommandType.Text);
                 }
@@ -318,7 +324,7 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGUID);
@@ -328,7 +334,7 @@ namespace OWSData.Repositories.Implementations.Postgres
                     p.Add("@LastName", lastName);
                     p.Add("@Role", "Player");
 
-                    await Connection.ExecuteAsync("select * from AddUser(@CustomerGUID, @FirstName, @LastName, @Email, @Password, @Role)",
+                    await connection.ExecuteAsync("select * from AddUser(@CustomerGUID, @FirstName, @LastName, @Email, @Password, @Role)",
                         p,
                         commandType: CommandType.Text);
                 }
@@ -351,9 +357,9 @@ namespace OWSData.Repositories.Implementations.Postgres
         {
             GetUserSession outputObject;
 
-            using (Connection)
+            using (var connection = (NpgsqlConnection)Connection)
             {
-                outputObject = await Connection.QueryFirstOrDefaultAsync<GetUserSession>(PostgresQueries.GetUserFromEmailSQL, new { @CustomerGUID = customerGUID, @Email = email });
+                outputObject = await connection.QueryFirstOrDefaultAsync<GetUserSession>(PostgresQueries.GetUserFromEmailSQL, new { @CustomerGUID = customerGUID, @Email = email });
             }
 
             return outputObject;
@@ -365,14 +371,14 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGUID);
                     p.Add("@UserSessionGUID", userSessionGUID);
                     p.Add("@CharacterName", characterName);
 
-                    await Connection.ExecuteAsync("call RemoveCharacter(@CustomerGUID,@UserSessionGUID,@CharacterName)",
+                    await connection.ExecuteAsync("call RemoveCharacter(@CustomerGUID,@UserSessionGUID,@CharacterName)",
                         p,
                         commandType: CommandType.Text);
                 }
@@ -397,7 +403,7 @@ namespace OWSData.Repositories.Implementations.Postgres
 
             try
             {
-                using (Connection)
+                using (var connection = (NpgsqlConnection)Connection)
                 {
                     var p = new DynamicParameters();
                     p.Add("@CustomerGUID", customerGuid);
@@ -406,7 +412,7 @@ namespace OWSData.Repositories.Implementations.Postgres
                     p.Add("@LastName", lastName);
                     p.Add("@Email", email);
 
-                    await Connection.ExecuteAsync(GenericQueries.UpdateUser,
+                    await connection.ExecuteAsync(GenericQueries.UpdateUser,
                         p,
                         commandType: CommandType.Text);
                 }

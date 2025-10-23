@@ -123,7 +123,15 @@ namespace OWSData.SQL
 				WHERE CCD.CustomerGUID = @CustomerGUID
 				  AND C.CharName = @CharName";
 
-	    public static readonly string GetPlayerGroupIDByType = @"SELECT COALESCE(PG.PlayerGroupID, 0)
+        public static readonly string GetDefaultCustomCharacterDataByDefaultSetName = @"SELECT *
+				FROM DefaultCustomCharacterData DCCD
+				INNER JOIN DefaultCharacterValues DCV 
+					ON DCCD.DefaultCharacterValuesId = DCV.DefaultCharacterValuesId
+				WHERE DCV.DefaultSetName = @DefaultSetName
+				AND DCCD.CustomerGUID = @CustomerGUID";
+
+
+        public static readonly string GetPlayerGroupIDByType = @"SELECT COALESCE(PG.PlayerGroupID, 0)
 				FROM PlayerGroupCharacters PGC
 				INNER JOIN PlayerGroup PG ON PG.PlayerGroupID = PGC.PlayerGroupID
 				WHERE PGC.CustomerGUID = @CustomerGUID
@@ -334,16 +342,18 @@ namespace OWSData.SQL
 				WHERE CustomerGUID = @CustomerGUID
 				  AND ZoneName = @ZoneName";
 
-		 public static readonly string GetZoneName = @"SELECT M.ZoneName
+		public static readonly string GetZoneName = @"SELECT M.ZoneName
 				FROM Maps M
 				INNER JOIN MapInstances MI ON MI.CustomerGUID = M.CustomerGUID
 				                          AND MI.MapID = M.MapID
 				WHERE M.CustomerGUID = @CustomerGUID
 				  AND MI.MapInstanceID = @MapInstanceID";
 
-	        public static readonly string RemoveMapInstances = @"DELETE FROM MapInstances WHERE CustomerGUID = @CustomerGUID AND MapInstanceID IN @MapInstances";
+	    public static readonly string RemoveMapInstances = @"DELETE FROM MapInstances WHERE CustomerGUID = @CustomerGUID AND MapInstanceID IN @MapInstances";
 
-	        public static readonly string UpdateMapInstanceStatus = @"UPDATE MapInstances
+        public static readonly string RemoveAllMapInstancesForWorldServer = @"DELETE FROM MapInstances WHERE CustomerGUID = @CustomerGUID AND WorldServerId = @WorldServerId";
+
+        public static readonly string UpdateMapInstanceStatus = @"UPDATE MapInstances
 				SET Status = @MapInstanceStatus
 				WHERE CustomerGUID = @CustomerGUID
 				  AND MapInstanceID = @MapInstanceID";

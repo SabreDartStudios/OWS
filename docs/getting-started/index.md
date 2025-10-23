@@ -14,7 +14,7 @@ Here is a brief overview of OWS 2.
 * OWS 1 required Windows and Windows Servers. OWS 2 runs natively on **Windows**, **Linux** and **MacOS**.
 
 ## What technologies / architecture does OWS 2 use?
-* The OWS Web API is developed in **C#** with **.NET 6** (previously .NET Core)
+* The OWS Web API is developed in **C#** with **.NET 8** (previously .NET Core)
 * The default storage technology is [Microsoft SQL Server (MSSQL)](mssql)
   * Each repository can use its own storage technology
   * [Storage technologies](setup-database) can be easily added by implementing each repository interface
@@ -45,5 +45,3 @@ Here is a brief overview of OWS 2.
 * A Zone Server Instance can represent an Unreal Engine map or a section of an Unreal Engine map
 * More than one Zone Server Instance can be run per Zone (shards) to allow more players in that Zone
 * A Zone Server Instance can be configured with a Soft Player Cap and a Hard Player Cap. New shards are spun up when the Soft Player Cap is met.
-
-[Next: Docker Setup](docker-setup){: .btn .btn-outline }
